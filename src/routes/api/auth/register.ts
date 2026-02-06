@@ -1,34 +1,53 @@
 import { Hono } from 'hono'
 import Database from '../../../utils/database'
-import Password from '../../../utils/password'
+import Auth from '../../../utils/auth'
 
 
 const db = Database.getInstance()
 const register = new Hono()
-const password = new Password()
-
-register.get('/', async (c) => {
-  const user = await db.select("users")
-  console.log(user)
-})
+const auth = new Auth()
 
 register.post('/', async (c) => {
   const body = await c.req.json()
-  const hash = await password.hash(body.password)
-  const username = body["username"]
+  const isValid = await auth.checkPasswordRequirements(body.password)
+  if (!isValid) {
+    return c.json({
+      "success": false,
+      "error": "Password does not match requirements"
+    }, 422)
+  }
+  const hash = await auth.hashPassword(body.password)
+  const username = body["username"].trim()
+  const token = auth.createToken()
+
   try {
     const result = await db.insert("users", {
       'username': username,
-      'passwordHash': hash
+      'passwordHash': hash,
+      'token': token
     })
-    c.status(200)
-    return c.text("OK")
+
+    return c.json({ "success": true }, 201)
 
   }
   catch (error) {
-    console.log(error)
-    c.status(500)
-    return c.text("Registration failed")
+
+    if (error instanceof Error) {
+      const err = error as Error & { errno?: number }
+
+      if (err.errno === 1062) {
+        return c.json({
+          "success": false,
+          "error": "Username already exists"
+        }, 409)
+      }
+      console.log(error)
+      return c.json({
+        "success": false,
+        "error": "Registration failed"
+      }, 500)
+
+    }
   }
 
 
