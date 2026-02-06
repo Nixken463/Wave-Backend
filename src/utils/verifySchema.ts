@@ -15,11 +15,16 @@ export async function verifySchema(c: Context, schema: ZodType) {
   const result = await schema.safeParseAsync(body)
 
   if (!result.success) {
-     
-    const errors = result.error.flatten()
+    let errorList: string[] = []
+    const errors = result.error.issues
+
+    for (const code of errors) {
+      const errorMessage = code.message
+      errorList.push(errorMessage)
+    }
     return c.json({
       "success": false,
-      errors
+      "errors": errorList
     }, 401)
   }
   return body

@@ -9,14 +9,14 @@ const register = new Hono()
 const auth = new Auth()
 
 register.post('/', async (c) => {
-  const validate = await verifySchema(c, registerSchema)
+  const body = await verifySchema(c, registerSchema)
 
-  //check if validate returned either an Error Response Object or the Request Body
-  if ('headers' in validate) {
-    return validate
+  //check if body returned either an Error Response Object or the Request Body
+  if ('headers' in body) {
+    return body
   }
-  const username: string = validate.username.trim().toLowerCase()
-  const password: string = validate.password.trim()
+  const username: string = body.username.trim().toLowerCase()
+  const password: string = body.password.trim()
   const hash = await auth.hashPassword(password)
   const token = await auth.createToken()
 
