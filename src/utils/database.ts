@@ -1,4 +1,4 @@
-import { sql, SQL } from "bun";
+import { sql, SQL, type ReservedSQL } from "bun";
 
 class Database {
   private static instance: Database;
@@ -29,12 +29,16 @@ class Database {
     return Database.instance;
   }
 
+  public async reserve() {
+    return await this.connectionPool.reserve()
+  }
+
 
   public async select(
     table: string,
     columns: string[] = ["*"],
     where: Record<string, any> = {},
-  ) {
+    connection = this.connectionPool) {
     let query = `SELECT ${columns.join(', ')} FROM ${table}`;
     const params: any[] = [];
 
@@ -46,14 +50,14 @@ class Database {
       params.push(...Object.values(where));
     }
 
-    const result = await this.connectionPool.unsafe(query, params);
+    const result = await connection.unsafe(query, params);
     return result;
   }
 
   public async insert(
     table: string,
     values: Record<string, string>,
-  ) {
+    connection = this.connectionPool) {
     const keys = Object.keys(values);
 
     if (keys.length === 0) {
@@ -66,7 +70,7 @@ class Database {
 
     const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
     console.log(query)
-    const result = await this.connectionPool.unsafe(query, params);
+    const result = await connection.unsafe(query, params);
     return result;
   }
 

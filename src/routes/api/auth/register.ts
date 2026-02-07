@@ -18,13 +18,11 @@ register.post('/', async (c) => {
   const username: string = body.username.trim().toLowerCase()
   const password: string = body.password.trim()
   const hash = await auth.hashPassword(password)
-  const token = await auth.createToken()
 
   try {
     const result = await db.insert("users", {
       'username': username,
       'passwordHash': hash,
-      'token': token
     })
 
     return c.json({ "success": true }, 201)
@@ -38,13 +36,13 @@ register.post('/', async (c) => {
       if (err.errno === 1062) {
         return c.json({
           "success": false,
-          "error": "Username already exists"
+          "errors": ["UsernameAlreadyExists"]
         }, 409)
       }
       console.log(error)
       return c.json({
         "success": false,
-        "error": "Registration failed"
+        "errors": ["RegistrationFailed"]
       }, 500)
 
     }

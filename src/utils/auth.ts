@@ -1,3 +1,4 @@
+import type { SQL } from "bun";
 import Database from "./database"
 import { randomBytes } from "node:crypto";
 class Auth {
@@ -27,12 +28,12 @@ class Auth {
     }
   }
 
-  async createToken(): Promise<string> {
+  async createToken(connection?: SQL): Promise<string> {
     let token: string = ""
     let tokenAlreadyExists: boolean = true
     while (tokenAlreadyExists) {
       token = randomBytes(32).toString('hex')
-      const row = await this.db.select("users", ["token"], { "token": token })
+      const row = await this.db.select("devices", ["token"], { "token": token },connection)
       if (row.length === 0) {
         tokenAlreadyExists = false
       }
@@ -41,15 +42,20 @@ class Auth {
 
   }
   async verifyToken(username: string, token: string): Promise<boolean> {
-    const row = await this.db.select("users", ["token"], { "username": username })
-    const user = row[0]
+    const connection = await this.db.reserve()
+    const userid = await this.db.select("users", ["userid"], { "username": username }, connection)
+    const row = await this.db.select("devices", ["token"], { "userid": userid }, connection)
+    connection.release()
+
     if (row.length === 0) {
       return false
     }
-    if (user["token"] !== token) {
-      return false
+    for (const device of row) {
+      if (device.token === token) {
+        return true
+      }
     }
-    return true
+    return false
   }
 
 }
