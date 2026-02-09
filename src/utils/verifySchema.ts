@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import { z, ZodType } from 'zod'
+import { ZodType } from 'zod'
 
 export async function verifySchema(c: Context, schema: ZodType) {
   let body

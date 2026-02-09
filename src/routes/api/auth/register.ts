@@ -1,12 +1,9 @@
 import { Hono } from 'hono'
-import Database from '../../../utils/database'
-import Auth from '../../../utils/auth'
-import { verifySchema } from '../../../utils/verifySchema'
-import { registerSchema } from '../../../schema/auth/registerSchema'
-
-const db = Database.getInstance()
-const register = new Hono()
-const auth = new Auth()
+import Auth from 'src/utils/auth'
+import { verifySchema } from 'src/utils/verifySchema'
+import { registerSchema } from 'src/schema/auth/registerSchema'
+import type { Env } from 'src/types/hono'
+const register = new Hono<Env>()
 
 register.post('/', async (c) => {
   const body = await verifySchema(c, registerSchema)
@@ -15,6 +12,9 @@ register.post('/', async (c) => {
   if ('headers' in body) {
     return body
   }
+  const db = c.get('db')
+  const auth = new Auth(db)
+
   const username: string = body.username.trim().toLowerCase()
   const password: string = body.password.trim()
   const hash = await auth.hashPassword(password)

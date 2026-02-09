@@ -1,12 +1,9 @@
 import { Hono } from 'hono'
-import Auth from '../../../utils/auth'
-import Database from '../../../utils/database'
-import { verifySchema } from '../../../utils/verifySchema'
-import { loginSchema } from '../../../schema/auth/loginSchema'
-
-const login = new Hono
-const auth = new Auth()
-const db = Database.getInstance()
+import { verifySchema } from 'src/utils/verifySchema'
+import { loginSchema } from 'src/schema/auth/loginSchema'
+import Auth from 'src/utils/auth'
+import type { Env } from 'src/types/hono'
+const login = new Hono<Env>
 
 login.post('/', async (c) => {
   const body = await verifySchema(c, loginSchema)
@@ -14,11 +11,14 @@ login.post('/', async (c) => {
   if ('headers' in body) {
     return body
   }
+  const db = c.get('db')
+  const auth = new Auth(db)
 
   const username = body.username.trim().toLowerCase()
   const sentPassword = body.password.trim()
   const os: string = body.os.trim()
   const isValid = await auth.verifyPassword(username, sentPassword)
+
   if (!isValid) {
     return c.json({
       "success": false,
@@ -26,16 +26,14 @@ login.post('/', async (c) => {
     }, 401)
   }
 
-  const connection = await db.reserve()
-  const user = await db.select("users", ["userId"], { "username": username }, connection)
+  const user = await db.select("users", ["userId"], { "username": username })
   const userId = user[0].userId
-  const token = await auth.createToken(connection)
+  const token = await auth.createToken()
   await db.insert("devices", {
     "userId": userId,
     "os": os,
     "token": token,
   })
-  connection.release()
 
 
   return c.json({

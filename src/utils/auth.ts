@@ -1,11 +1,13 @@
-import type { SQL } from "bun";
-import Database from "./database"
+import type { ReservedSQL, SQL } from "bun";
+import Database from "./database";
 import { randomBytes } from "node:crypto";
 class Auth {
-  private db;
-  constructor() {
-    this.db = Database.getInstance()
+  private db:Database
+  constructor(db:Database) {
+
+    this.db = db
   }
+
 
   async hashPassword(password: string): Promise<string> {
     return Bun.password.hash(password)
@@ -28,12 +30,12 @@ class Auth {
     }
   }
 
-  async createToken(connection?: SQL): Promise<string> {
+  async createToken(): Promise<string> {
     let token: string = ""
     let tokenAlreadyExists: boolean = true
     while (tokenAlreadyExists) {
       token = randomBytes(32).toString('hex')
-      const row = await this.db.select("devices", ["token"], { "token": token },connection)
+      const row = await this.db.select("devices", ["token"], { "token": token })
       if (row.length === 0) {
         tokenAlreadyExists = false
       }
@@ -42,10 +44,8 @@ class Auth {
 
   }
   async verifyToken(username: string, token: string): Promise<boolean> {
-    const connection = await this.db.reserve()
-    const userid = await this.db.select("users", ["userid"], { "username": username }, connection)
-    const row = await this.db.select("devices", ["token"], { "userid": userid }, connection)
-    connection.release()
+    const userid = await this.db.select("users", ["userid"], { "username": username })
+    const row = await this.db.select("devices", ["token"], { "userid": userid })
 
     if (row.length === 0) {
       return false

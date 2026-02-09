@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import Router from './utils/router'
-
-const app = new Hono()
+import type { Env } from './types/hono'
+const app = new Hono<Env>()
 const router = new Router(app)
 
 
