@@ -6,11 +6,14 @@ import type { Env } from 'src/types/hono'
 export default async function databaseMiddleware(c: Context<Env>, next: Next) {
   const pool = ConnectionPool.getInstance()
   const connection = await pool.reserve()
-  c.set('db', new Database(connection))
+  const db = new Database(connection)
+  c.set('db', db)
   try {
     await next()
   } finally {
-    await connection.release()
+    if (!db.checkIfReleased()) {
+      connection.release()
+    }
   }
 }
 

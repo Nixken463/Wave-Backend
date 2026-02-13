@@ -1,4 +1,3 @@
-import type { ReservedSQL, SQL } from "bun";
 import Database from "./database";
 import { randomBytes } from "node:crypto";
 class Auth {

@@ -14,7 +14,7 @@ login.post('/', async (c) => {
   const db = c.get('db')
   const auth = new Auth(db)
 
-  const username = body.username.trim().toLowerCase()
+  const username = body.username.trim().toLowerCase().replaceAll(" ", "_")
   const sentPassword = body.password.trim()
   const os: string = body.os.trim()
   const isValid = await auth.verifyPassword(username, sentPassword)
@@ -26,8 +26,7 @@ login.post('/', async (c) => {
     }, 401)
   }
 
-  const user = await db.select("users", ["userId"], { "username": username })
-  const userId = user[0].userId
+  const userId = c.get('userId')
   const token = await auth.createToken()
   await db.insert("devices", {
     "userId": userId,

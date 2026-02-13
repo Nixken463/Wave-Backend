@@ -15,7 +15,7 @@ register.post('/', async (c) => {
   const db = c.get('db')
   const auth = new Auth(db)
 
-  const username: string = body.username.trim().toLowerCase()
+  const username: string = body.username.trim().toLowerCase().replaceAll(" ", "_")
   const password: string = body.password.trim()
   const hash = await auth.hashPassword(password)
 

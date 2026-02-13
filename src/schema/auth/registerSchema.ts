@@ -4,8 +4,7 @@ export const registerSchema = z.object({
   username: z.string()
     .min(3, "UsernameTooShort")
     .max(32, "UsernameTooLong")
-    .regex(/^[a-zA-Z0-9_]+$/, "UsernameContainsSpecialCharacter"),
-    
+    .regex(/^[a-zA-Z0-9_\s]+$/, "UsernameContainsSpecialCharacter"),
   password: z.string()
     .min(8, "PasswordTooShort")
     .max(64, "PasswordTooLong")
