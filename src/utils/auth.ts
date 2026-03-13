@@ -45,7 +45,6 @@ class Auth {
   }
   async checkToken(token: string): Promise<checkToken> {
     const result = await this.db.select('devices', ['*'], { 'token': token })
-    console.log(result)
     if (result.length === 0) {
       return {
         "success": false,

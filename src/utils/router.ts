@@ -17,7 +17,7 @@ class Router {
     }
 
     async load() {
-        const glob = new Glob("src/routes/**/*.ts")
+        const glob = new Glob("src/routes/api/**/*.ts")
 
         for (const filepath of glob.scanSync()) {
             //skip the router itself

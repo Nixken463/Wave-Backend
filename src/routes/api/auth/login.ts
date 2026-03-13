@@ -26,7 +26,8 @@ login.post('/', async (c) => {
     }, 401)
   }
 
-  const userId = c.get('userId')
+  const result = await db.select("users", ['userId'],{"username":username})
+  const userId = result[0].userId
   const token = await auth.createToken()
   await db.insert("devices", {
     "userId": userId,

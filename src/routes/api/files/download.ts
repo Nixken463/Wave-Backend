@@ -11,6 +11,7 @@ download.get('/:fileId', async (c) => {
 
     if (!fileId) return c.json({ "success": false, "errors": "MissingParams" })
     const fileResult = await db.select('files', ['filename', 'userId', 'type',], { 'fileId': fileId })
+    if(fileResult.length === 0) return c.json({"success":false, "erros":"FileDoesNotExist"})
     const fileOwnerId = fileResult[0].userId
     const filetype = fileResult[0].type
     const fileMime = fileResult[0].mime
