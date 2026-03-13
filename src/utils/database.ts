@@ -54,7 +54,7 @@ class Database {
   }
   public async insert(
     table: string,
-    values: Record<string, string | number>,
+    values: Record<string, string | number | null>,
     returnId: boolean = false) {
     const keys = Object.keys(values);
 

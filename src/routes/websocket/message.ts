@@ -6,7 +6,17 @@ import type { activeUserMap } from "src/types/activeUserMap";
 import type { messages } from "src/types/messages";
 
 async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer, activeUsers: activeUserMap) {
-    const data = JSON.parse(message.toString()) as messages
+    let data
+    try {
+        data = JSON.parse(message.toString()) as messages
+    }
+    catch (error) {
+        ws.send(JSON.stringify({
+            type: "error",
+            error: "InvalidJson"
+        }))
+        return
+    }
     const senderId = ws.data.userId
     const content = data.content
     const fileId = data.fileId
@@ -17,7 +27,6 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
         const con = await ConnectionPool.getInstance().reserve()
         const db = new Database(con)
         const result = await db.select('conversations', ["*"], { "conversationId": conversationId })
-        db.release()
         const recipients: Set<string> = new Set(
             result.map((row: { userId: string }) => row.userId.toString())
         )
@@ -30,7 +39,12 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
             return
         }
 
+        const createMessage = await db.insert('messages', {
+            "conversationId": conversationId,
+            "senderId": senderId,
+            "content": content || null
 
+        })
         //send message
         for (const entry of recipients) {
             const recipient = activeUsers.get(entry)
@@ -41,7 +55,7 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
                 console.log(`Recipient ${entry} is not active.`)
                 continue
             }
-        
+
             for (const connection of recipient) {
                 if (connection.readyState === 1) {
                     connection.send(JSON.stringify({
@@ -59,6 +73,7 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
     }
     catch (error) {
         console.log(error)
+
     }
 
 
