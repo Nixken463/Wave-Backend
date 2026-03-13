@@ -1,7 +1,7 @@
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "src/types/wsdata";
 import type { activeUserMap} from "src/types/activeUserMap";
-import sendMessage from "./message";
+import sendMessage from "./sendMessage";
 
 export const activeUsers:activeUserMap = new Map()
 
