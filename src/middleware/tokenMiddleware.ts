@@ -1,24 +1,19 @@
 import type { Context, Next } from 'hono'
 import Auth from 'src/utils/auth'
+import Responses from 'src/utils/responses'
 export default async function tokenMiddleware(c: Context, next: Next) {
+    const r = new Responses(c)
     const db = c.get('db')
     const bearer = c.req.header('Authorization')
     if (!bearer) {
-        return c.json({
-            "success": false,
-            "errors": "MissingToken"
-        }, 400)
+        return r.returnError("MissingToken", 400)
     }
     const token = bearer.replace("Bearer", "").trim()
     try {
-        
+
         const result = await new Auth(db).checkToken(token)
-        console.log(result)
-        if (result.success ===false ) {
-            return c.json({
-                "success": false,
-                "errors": "InvalidToken"
-            }, 401)
+        if (result.success === false) {
+            return r.returnError("InvalidToken", 401)
         }
         const userId = result.userId
         c.set('token', token)
@@ -27,10 +22,8 @@ export default async function tokenMiddleware(c: Context, next: Next) {
     }
     catch (error) {
         console.log(error)
-        return c.json({
-            "success": false,
-            "errors": "InternalServerError"
-        }, 500)
+        return r.returnError("InternalServerError", 500)
+
     }
 
 

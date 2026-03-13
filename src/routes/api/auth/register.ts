@@ -3,11 +3,12 @@ import Auth from 'src/utils/auth'
 import { verifySchema } from 'src/utils/verifySchema'
 import { registerSchema } from 'src/schema/auth/registerSchema'
 import type { Env } from 'src/types/hono'
+import Responses from 'src/utils/responses'
 const register = new Hono<Env>()
 
 register.post('/', async (c) => {
   const body = await verifySchema(c, registerSchema)
-
+  const r = new Responses(c)
   //check if body returned either an Error Response Object or the Request Body
   if ('headers' in body) {
     return body
@@ -20,30 +21,23 @@ register.post('/', async (c) => {
   const hash = await auth.hashPassword(password)
 
   try {
-    const exists = await db.select("users",["*"],{"username":username})
+    const exists = await db.select("users", ["*"], { "username": username })
+
     if (exists.length > 0) {
-      return c.json({
-          "success": false,
-          "errors": ["UsernameAlreadyExists"]
-        }, 409)
+      return r.returnError("UsernameAlreadyExists", 409)
     }
-    const result = await db.insert("users", {
+
+    await db.insert("users", {
       'username': username,
       'passwordHash': hash,
     })
-
-    return c.json({ "success": true }, 201)
+    return r.returnSuccess(201)
 
   }
   catch (error) {
-
-      return c.json({
-        "success": false,
-        "errors": ["RegistrationFailed"]
-      }, 500)
-
-    }
+    return r.returnError("RegistrationFailed", 500)
   }
+}
 
 
 )

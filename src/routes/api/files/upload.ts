@@ -3,10 +3,11 @@ import type { Env } from 'src/types/hono'
 import { verifyFileSchema } from 'src/utils/verifySchema'
 import { uploadSchema } from 'src/schema/files/uploadSchema'
 import testFileSize from 'src/utils/files'
+import Responses from 'src/utils/responses'
 const upload = new Hono<Env>
 
 upload.post('/', async (c) => {
-
+    const r = new Responses(c)
     const db = c.get('db')
     const host = process.env.USER
     const body = await c.req.parseBody()
@@ -31,7 +32,9 @@ upload.post('/', async (c) => {
 
     if (filedata) {
         try {
-            if (!await testFileSize(filedata.size, fileType)) return c.json({ "success": false, "errors": "FileTooLarge" })
+            if (!await testFileSize(filedata.size, fileType)) {
+                return r.returnError("FileTooLarge", 400)
+            }
 
             const insertResult = await db.insert("files", {
                 "userId": userId,
@@ -40,7 +43,10 @@ upload.post('/', async (c) => {
                 "size": filesize,
                 "type": fileType
             }, true)
-            if (insertResult.length === 0) return c.json({ "success": false, "errors": "InternalServerError" }, 500)
+            if (insertResult.length === 0) {
+                return r.returnError("InternalServerError", 500)
+            }
+
             const fileId: number = insertResult
             const basepath = `/home/${host}/files/`
             const filebuffer = await filedata.arrayBuffer()
@@ -51,31 +57,25 @@ upload.post('/', async (c) => {
             }
             else {
                 if (!body.conversationId) {
-                    return c.json({
-                        "success": false,
-                        "errors": "MissingConversationId"
-                    })
+                    return r.returnError("MissingConversationId", 400)
                 }
                 filepath = `${basepath}conversation/${body.conversationId}/${fileId}`
             }
             await Bun.write(filepath, filebuffer, { createPath: true })
-
-            return c.json({
-                "success": true
-            }, 200)
+            //successful upload
+            return r.returnSuccess(200)
+        
         }
+
+
+
         catch (error) {
-            return c.json({
-                "success": false,
-                "error": error
-            }, 500)
+            return r.returnError(error as string, 500)
         }
 
     }
-    return c.json({
-        "success": false,
-        "error": "FileUploadError"
-    })
+    return r.returnError("FileUploadError", 500)
+
 })
 
 

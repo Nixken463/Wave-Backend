@@ -3,10 +3,12 @@ import { verifySchema } from 'src/utils/verifySchema'
 import { loginSchema } from 'src/schema/auth/loginSchema'
 import Auth from 'src/utils/auth'
 import type { Env } from 'src/types/hono'
+import Responses from 'src/utils/responses'
 const login = new Hono<Env>
 
 login.post('/', async (c) => {
   const body = await verifySchema(c, loginSchema)
+  const r = new Responses(c)
 
   if ('headers' in body) {
     return body
@@ -20,13 +22,10 @@ login.post('/', async (c) => {
   const isValid = await auth.verifyPassword(username, sentPassword)
 
   if (!isValid) {
-    return c.json({
-      "success": false,
-      "errors": "WrongCredentials"
-    }, 401)
+    return r.returnError("WrongCredentials", 401)
   }
 
-  const result = await db.select("users", ['userId'],{"username":username})
+  const result = await db.select("users", ['userId'], { "username": username })
   const userId = result[0].userId
   const token = await auth.createToken()
   await db.insert("devices", {
@@ -35,11 +34,8 @@ login.post('/', async (c) => {
     "token": token,
   })
 
+  return r.returnPayload(token, 201)
 
-  return c.json({
-    "success": true,
-    "token": token
-  }, 200)
 
 })
 
