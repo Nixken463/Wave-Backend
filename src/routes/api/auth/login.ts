@@ -22,7 +22,7 @@ login.post('/', async (c) => {
   const isValid = await auth.verifyPassword(username, sentPassword)
 
   if (!isValid) {
-    return r.returnError("WrongCredentials", 401)
+    return r.error("WrongCredentials", 401)
   }
 
   const result = await db.select("users", ['userId'], { "username": username })
@@ -34,7 +34,7 @@ login.post('/', async (c) => {
     "token": token,
   })
 
-  return r.returnPayload(token, 201)
+  return r.data(token, 201)
 
 
 })

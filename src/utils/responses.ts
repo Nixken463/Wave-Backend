@@ -1,11 +1,11 @@
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 class Responses {
-    private c
+    private c: Context
     public constructor(c: Context) {
         this.c = c
     }
-    returnError(error: string, statusCode: ContentfulStatusCode): Response {
+    error(error: string, statusCode: ContentfulStatusCode): Response {
         return this.c.json(
             {
                 "success": false,
@@ -15,24 +15,24 @@ class Responses {
         )
     }
 
-    returnSuccess(statusCode:ContentfulStatusCode):Response{
+    success(statusCode: ContentfulStatusCode): Response {
         return this.c.json(
             {
-                "success":true,
+                "success": true,
             },
             statusCode
         )
     }
 
-    returnPayload(payload:string,statusCode:ContentfulStatusCode):Response{
-            return this.c.json(
+    data(data: string, statusCode: ContentfulStatusCode): Response {
+        return this.c.json(
             {
-                "success":true,
-                "payload":payload
+                "success": true,
+                "data": data
             },
             statusCode
         )
     }
-}   
+}
 
 export default Responses

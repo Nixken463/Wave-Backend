@@ -9,7 +9,7 @@ logout.post("/", async (c) => {
     const db = c.get('db')
     const token = c.get('token')
     await db.remove('devices', { "token": token })
-    return r.returnSuccess(200)
+    return r.success(200)
 })
 
 export default logout

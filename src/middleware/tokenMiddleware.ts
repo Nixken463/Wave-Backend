@@ -6,14 +6,14 @@ export default async function tokenMiddleware(c: Context, next: Next) {
     const db = c.get('db')
     const bearer = c.req.header('Authorization')
     if (!bearer) {
-        return r.returnError("MissingToken", 400)
+        return r.error("MissingToken", 400)
     }
     const token = bearer.replace("Bearer", "").trim()
     try {
 
         const result = await new Auth(db).checkToken(token)
         if (result.success === false) {
-            return r.returnError("InvalidToken", 401)
+            return r.error("InvalidToken", 401)
         }
         const userId = result.userId
         c.set('token', token)
@@ -22,7 +22,7 @@ export default async function tokenMiddleware(c: Context, next: Next) {
     }
     catch (error) {
         console.log(error)
-        return r.returnError("InternalServerError", 500)
+        return r.error("InternalServerError", 500)
 
     }
 

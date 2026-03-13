@@ -33,7 +33,7 @@ upload.post('/', async (c) => {
     if (filedata) {
         try {
             if (!await testFileSize(filedata.size, fileType)) {
-                return r.returnError("FileTooLarge", 400)
+                return r.error("FileTooLarge", 400)
             }
 
             const insertResult = await db.insert("files", {
@@ -44,7 +44,7 @@ upload.post('/', async (c) => {
                 "type": fileType
             }, true)
             if (insertResult.length === 0) {
-                return r.returnError("InternalServerError", 500)
+                return r.error("InternalServerError", 500)
             }
 
             const fileId: number = insertResult
@@ -57,24 +57,24 @@ upload.post('/', async (c) => {
             }
             else {
                 if (!body.conversationId) {
-                    return r.returnError("MissingConversationId", 400)
+                    return r.error("MissingConversationId", 400)
                 }
                 filepath = `${basepath}conversation/${body.conversationId}/${fileId}`
             }
             await Bun.write(filepath, filebuffer, { createPath: true })
             //successful upload
-            return r.returnSuccess(200)
+            return r.success(200)
         
         }
 
 
 
         catch (error) {
-            return r.returnError(error as string, 500)
+            return r.error(error as string, 500)
         }
 
     }
-    return r.returnError("FileUploadError", 500)
+    return r.error("FileUploadError", 500)
 
 })
 

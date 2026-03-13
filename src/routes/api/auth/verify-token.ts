@@ -5,7 +5,7 @@ const verifyToken = new Hono<Env>
 
 verifyToken.get("/", async (c) => {
     const r = new Responses(c)
-    return r.returnSuccess(200)
+    return r.success(200)
  
 })
 export default verifyToken

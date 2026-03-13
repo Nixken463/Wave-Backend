@@ -11,16 +11,16 @@ remove.delete('/:fileId', async (c) => {
 
     const filedata = await db.select("files", ["userId"], { "fileId": fileId })
     if (filedata.length === 0) {
-        return r.returnError("FileDoesNotExist", 400)
+        return r.error("FileDoesNotExist", 400)
     }
 
     if (senderId !== filedata[0].userId) {
-        return r.returnError("MissingPermissions", 403)
+        return r.error("MissingPermissions", 403)
 
     }
     db.remove("files", { "fileId": fileId })
     db.remove("attachments", { "fileId": fileId })
-    return r.returnSuccess(200)
+    return r.success(200)
   
 })
 

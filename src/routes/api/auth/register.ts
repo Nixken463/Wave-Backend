@@ -24,18 +24,18 @@ register.post('/', async (c) => {
     const exists = await db.select("users", ["*"], { "username": username })
 
     if (exists.length > 0) {
-      return r.returnError("UsernameAlreadyExists", 409)
+      return r.error("UsernameAlreadyExists", 409)
     }
 
     await db.insert("users", {
       'username': username,
       'passwordHash': hash,
     })
-    return r.returnSuccess(201)
+    return r.success(201)
 
   }
   catch (error) {
-    return r.returnError("RegistrationFailed", 500)
+    return r.error("RegistrationFailed", 500)
   }
 }
 

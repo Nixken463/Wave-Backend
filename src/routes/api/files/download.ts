@@ -11,12 +11,12 @@ download.get('/:fileId', async (c) => {
     const r = new Responses(c)
 
     if (!fileId) {
-        return r.returnError("MissingParams", 400)
+        return r.error("MissingParams", 400)
     }
     const fileResult = await db.select('files', ['filename', 'userId', 'type',], { 'fileId': fileId })
 
     if (fileResult.length === 0) {
-        return r.returnError("FileDoesNotExist", 400)
+        return r.error("FileDoesNotExist", 400)
     }
     const fileOwnerId = fileResult[0].userId
     const filetype = fileResult[0].type
@@ -36,7 +36,7 @@ download.get('/:fileId', async (c) => {
 `
         db.release()
         if (result.length === 0) {
-            return r.returnError("MissingPermissions", 403)
+            return r.error("MissingPermissions", 403)
         }
         const conversationId = result[0].conversationId
 
@@ -50,7 +50,7 @@ download.get('/:fileId', async (c) => {
     const file = Bun.file(path)
     const fileExists = await file.exists()
     if (!fileExists) {
-        return r.returnError("FileNotFound", 400)
+        return r.error("FileNotFound", 400)
     }
     const fileStats = await stat(path)
     c.header('Content-Type', 'application/octet-stream');
