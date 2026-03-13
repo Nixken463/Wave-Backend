@@ -1,6 +1,6 @@
 import Database from "./database";
 import { randomBytes } from "node:crypto";
-
+import type { checkToken } from "src/types/checkToken";
 class Auth {
   private db: Database
   constructor(db: Database) {
@@ -43,12 +43,13 @@ class Auth {
     return token
 
   }
-  async checkToken(token: string): Promise<Record<string, number | boolean>> {
+  async checkToken(token: string): Promise<checkToken> {
     const result = await this.db.select('devices', ['*'], { 'token': token })
     console.log(result)
     if (result.length === 0) {
       return {
-        "success": false
+        "success": false,
+        "userId":""
       }
     }
     return {

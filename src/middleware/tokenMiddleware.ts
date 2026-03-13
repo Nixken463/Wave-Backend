@@ -13,7 +13,7 @@ export default async function tokenMiddleware(c: Context, next: Next) {
     try {
         
         const result = await new Auth(db).checkToken(token)
-        
+        console.log(result)
         if (result.success ===false ) {
             return c.json({
                 "success": false,
