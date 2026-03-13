@@ -1,6 +1,5 @@
 import type { Context, Next } from 'hono'
-
-
+import Auth from 'src/utils/auth'
 export default async function tokenMiddleware(c: Context, next: Next) {
     const db = c.get('db')
     const bearer = c.req.header('Authorization')
@@ -12,15 +11,16 @@ export default async function tokenMiddleware(c: Context, next: Next) {
     }
     const token = bearer.replace("Bearer", "").trim()
     try {
-        const result = await db.select('devices', ['*'], { 'token': token })
-
-        if (result.length === 0) {
+        
+        const result = await new Auth(db).checkToken(token)
+        
+        if (result.success ===false ) {
             return c.json({
                 "success": false,
                 "errors": "InvalidToken"
             }, 401)
         }
-        const userId = result[0].userId
+        const userId = result.userId
         c.set('token', token)
         c.set('userId', userId)
         await next()

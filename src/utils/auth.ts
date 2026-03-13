@@ -1,8 +1,9 @@
 import Database from "./database";
 import { randomBytes } from "node:crypto";
+
 class Auth {
-  private db:Database
-  constructor(db:Database) {
+  private db: Database
+  constructor(db: Database) {
 
     this.db = db
   }
@@ -42,20 +43,21 @@ class Auth {
     return token
 
   }
-  async verifyToken(username: string, token: string): Promise<boolean> {
-    const userid = await this.db.select("users", ["userid"], { "username": username })
-    const row = await this.db.select("devices", ["token"], { "userid": userid })
-
-    if (row.length === 0) {
-      return false
-    }
-    for (const device of row) {
-      if (device.token === token) {
-        return true
+  async checkToken(token: string): Promise<Record<string, number | boolean>> {
+    const result = await this.db.select('devices', ['*'], { 'token': token })
+    console.log(result)
+    if (result.length === 0) {
+      return {
+        "success": false
       }
     }
-    return false
+    return {
+      "success": true,
+      "userId": result[0].userId
+
+    }
   }
+
 
 }
 
