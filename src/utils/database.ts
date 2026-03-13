@@ -36,21 +36,17 @@ class Database {
       params.push(...Object.values(where))
     }
 
-    try {
-      const result = await this.connection.unsafe(query, params)
-      return result
-    } catch (error) {
-      console.error(error)
-    }
+    const result = await this.connection.unsafe(query, params)
+    return result
+
   }
   //intended only for complex queries, for simple ones use the respective functions
   public async query(query: TemplateStringsArray, ...values: any[]) {
-    try {
-      const result = await this.connection(query, ...values)
-      return result
-    } catch (error) {
-      console.error(error)
-    }
+
+    const result = await this.connection(query, ...values)
+    return result
+
+
   }
   public async insert(
     table: string,
@@ -65,26 +61,26 @@ class Database {
     const columns = keys.join(", ");
     const placeholders = keys.map(() => "?").join(", ");
     const params = Object.values(values);
-    try {
-      const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
-      const result = await this.connection.unsafe(query, params);
 
-      if (returnId) {
-        const select = await this.connection`SELECT LAST_INSERT_ID()`
-        const insertId = select[0]["LAST_INSERT_ID()"]
-        return insertId
-      }
-      return result
+    const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
+    const result = await this.connection.unsafe(query, params);
+
+    if (returnId) {
+      const select = await this.connection`SELECT LAST_INSERT_ID()`
+      const insertId = select[0]["LAST_INSERT_ID()"]
+      return insertId
     }
-    catch (error) {
-      console.error(error)
-    }
+    return result
+
+
   }
+
+
   public async remove(
     table: string,
     where: Record<string, any> = {}) {
 
-    if (Object.keys(where).length  === 0) {
+    if (Object.keys(where).length === 0) {
       console.error("Remove all not allowed")
       return
     }
@@ -99,12 +95,9 @@ class Database {
       params.push(...Object.values(where))
     }
 
-    try {
       const result = await this.connection.unsafe(query, params)
       return result
-    } catch (error) {
-      console.error(error)
-    }
+
 
   }
 
