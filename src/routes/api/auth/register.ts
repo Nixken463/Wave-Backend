@@ -20,6 +20,13 @@ register.post('/', async (c) => {
   const hash = await auth.hashPassword(password)
 
   try {
+    const exists = await db.select("users",["*"],{"username":username})
+    if (exists.length > 0) {
+      return c.json({
+          "success": false,
+          "errors": ["UsernameAlreadyExists"]
+        }, 409)
+    }
     const result = await db.insert("users", {
       'username': username,
       'passwordHash': hash,
@@ -30,16 +37,6 @@ register.post('/', async (c) => {
   }
   catch (error) {
 
-    if (error instanceof Error) {
-      const err = error as Error & { errno?: number }
-
-      if (err.errno === 1062) {
-        return c.json({
-          "success": false,
-          "errors": ["UsernameAlreadyExists"]
-        }, 409)
-      }
-      console.log(error)
       return c.json({
         "success": false,
         "errors": ["RegistrationFailed"]
@@ -49,8 +46,7 @@ register.post('/', async (c) => {
   }
 
 
-
-})
+)
 
 
 export default register
