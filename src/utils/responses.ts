@@ -8,7 +8,6 @@ class Responses {
     error(error: string, statusCode: ContentfulStatusCode): Response {
         return this.c.json(
             {
-                "success": false,
                 "error": error
             },
             statusCode
@@ -18,7 +17,6 @@ class Responses {
     success(statusCode: ContentfulStatusCode): Response {
         return this.c.json(
             {
-                "success": true,
             },
             statusCode
         )
@@ -26,10 +24,9 @@ class Responses {
 
     data(data: string, statusCode: ContentfulStatusCode): Response {
         return this.c.json(
-            {
-                "success": true,
-                "data": data
-            },
+
+            data
+            ,
             statusCode
         )
     }
