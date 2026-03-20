@@ -1,7 +1,9 @@
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "src/types/wsdata";
 import type { activeUserMap} from "src/types/activeUserMap";
+import type { messages } from "src/types/messages";
 import sendMessage from "./sendMessage";
+import updateMessage from "./updateMessage";
 
 export const activeUsers:activeUserMap = new Map()
 
@@ -17,7 +19,24 @@ export const websocketHandlers = {
   },
 
   async message(ws: ServerWebSocket<WSData>, message: string | Buffer) {
-    await sendMessage(ws,message,activeUsers)
+    let data
+        try {
+            data = JSON.parse(message.toString()) as messages
+        }
+        catch (error) {
+            ws.send(JSON.stringify({
+                type: "error",
+                error: "InvalidJson"
+            }))
+            return
+        }
+    if (data.messageId){
+      updateMessage(ws,data)
+      return
+    }
+
+    await sendMessage(ws,data,activeUsers)
+
   },
 
   close(ws: ServerWebSocket<WSData>) {

@@ -5,21 +5,11 @@ import type { WSData } from "src/types/wsdata";
 import type { activeUserMap } from "src/types/activeUserMap";
 import type { messages } from "src/types/messages";
 import Auth from "src/utils/auth";
-async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer, activeUsers: activeUserMap) {
-    let data
-    try {
-        data = JSON.parse(message.toString()) as messages
-    }
-    catch (error) {
-        ws.send(JSON.stringify({
-            type: "error",
-            error: "InvalidJson"
-        }))
-        return
-    }
+import Message from "src/utils/message";
+async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUsers: activeUserMap) {
     const senderId = ws.data.userId
-    const content = data.content
-    const fileId = data.fileId
+    const content = data.content as string
+    const fileId = data.fileId as string
     const conversationId = data.conversationId
     const con = await ConnectionPool.getInstance().reserve()
     const db = new Database(con)
@@ -57,28 +47,10 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
                 return
             }
         }
+        const message = new Message(senderId, activeUsers)
         //send message
-        for (const entry of recipients) {
-            const recipient = activeUsers.get(entry)
-            //skip sender
-            if (entry == senderId) continue
-            if (!recipient) {
-                //ToDo send push notification
-                console.log(`Recipient ${entry} is not active.`)
-                continue
-            }
+        message.send(recipients, { content, senderId, conversationId, fileId })
 
-            for (const connection of recipient) {
-                if (connection.readyState === 1) {
-                    connection.send(JSON.stringify({
-                        content,
-                        conversationId,
-                        senderId,
-                    }));
-                }
-            }
-
-        }
 
 
 
