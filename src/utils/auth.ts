@@ -48,7 +48,7 @@ class Auth {
     if (result.length === 0) {
       return {
         "success": false,
-        "userId":""
+        "userId": ""
       }
     }
     return {
@@ -56,6 +56,16 @@ class Auth {
       "userId": result[0].userId
 
     }
+  }
+  async userInConversation(conversationId: string, userId: string): Promise<undefined | Set<string>> {
+    const result = await this.db.select('conversations', ["*"], { "conversationId": conversationId })
+    const recipients: Set<string> = new Set(
+      result.map((row: { userId: string }) => row.userId.toString())
+    )
+    if (!recipients.has(userId)) {
+      return
+    }
+    return recipients
   }
 
 

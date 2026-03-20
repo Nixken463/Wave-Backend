@@ -4,7 +4,7 @@ import ConnectionPool from "src/utils/connectionPool";
 import type { WSData } from "src/types/wsdata";
 import type { activeUserMap } from "src/types/activeUserMap";
 import type { messages } from "src/types/messages";
-
+import Auth from "src/utils/auth";
 async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer, activeUsers: activeUserMap) {
     let data
     try {
@@ -21,17 +21,13 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
     const content = data.content
     const fileId = data.fileId
     const conversationId = data.conversationId
-
+    const con = await ConnectionPool.getInstance().reserve()
+    const db = new Database(con)
+    const auth = new Auth(db)
     try {
         //check if both users are in a conversation
-        const con = await ConnectionPool.getInstance().reserve()
-        const db = new Database(con)
-        const result = await db.select('conversations', ["*"], { "conversationId": conversationId })
-        const recipients: Set<string> = new Set(
-            result.map((row: { userId: string }) => row.userId.toString())
-        )
-
-        if (!recipients.has(senderId)) {
+        const recipients = await auth.userInConversation(conversationId, senderId)
+        if (!recipients) {
             ws.send(JSON.stringify({
                 type: "error",
                 error: "UserNotInConversation"
@@ -90,6 +86,9 @@ async function sendMessage(ws: ServerWebSocket<WSData>, message: string | Buffer
     catch (error) {
         console.log(error)
 
+    }
+    finally {
+        db.release()
     }
 
 
