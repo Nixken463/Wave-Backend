@@ -46,5 +46,8 @@ const server = serve<WSData>({
       return app.fetch(req)
     },
 
-    websocket: websocketHandlers,
+    websocket: {
+      ...websocketHandlers,
+      idleTimeout:0
+    },
   })
