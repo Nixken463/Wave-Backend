@@ -1,18 +1,16 @@
 import type { ServerWebSocket } from "bun";
-import Database from "src/utils/database";
-import ConnectionPool from "src/utils/connectionPool";
+import type Database from "src/utils/database";
 import type { WSData } from "src/types/wsdata";
 import type { activeUserMap } from "src/types/activeUserMap";
 import type { messages } from "src/types/messages";
 import Auth from "src/utils/auth";
 import Message from "src/utils/message";
-async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUsers: activeUserMap) {
+
+async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUsers: activeUserMap, db:Database) {
     const senderId = ws.data.userId
     const content = data.content as string
     const fileId = data.fileId as string
     const conversationId = data.conversationId
-    const con = await ConnectionPool.getInstance().reserve()
-    const db = new Database(con)
     const auth = new Auth(db)
     try {
         //check if both users are in a conversation
@@ -49,7 +47,7 @@ async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUs
         }
         const message = new Message(senderId, activeUsers)
         //send message
-        message.send(recipients, { content, senderId, conversationId, fileId })
+        message.send(recipients, { content, senderId, conversationId, fileId }, createMessage)
 
 
 
