@@ -40,6 +40,32 @@ class Database {
     return result
 
   }
+  public async update(
+    table: string,
+    values: Record<string, string>,
+    where: Record<string, string>
+  ) {
+    const setClause = Object.keys(values)
+      .map(key => `${key} = ?`)
+      .join(', ')
+
+    const params: any[] = [...Object.values(values)]
+
+    let query = `UPDATE ${table} SET ${setClause}`
+
+    if (Object.keys(where).length > 0) {
+      const conditions = Object.keys(where)
+        .map(key => `${key} = ?`)
+        .join(' AND ')
+
+      query += ` WHERE ${conditions}`
+      params.push(...Object.values(where))
+    }
+
+    const result = await this.connection.unsafe(query, params)
+    return result
+  }
+
   //intended only for complex queries, for simple ones use the respective functions
   public async query(query: TemplateStringsArray, ...values: any[]) {
 
@@ -95,8 +121,8 @@ class Database {
       params.push(...Object.values(where))
     }
 
-      const result = await this.connection.unsafe(query, params)
-      return result
+    const result = await this.connection.unsafe(query, params)
+    return result
 
 
   }
