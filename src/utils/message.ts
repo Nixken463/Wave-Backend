@@ -1,11 +1,12 @@
-import type { activeUserMap } from "src/types/activeUserMap";
+import { activeUsers } from "src/routes/websocket/handler";
 class Message {
     private activeUsers
     private senderId
 
-    public constructor(senderId: string, activeUsers: activeUserMap) {
+    public constructor(senderId: string) {
         this.senderId = senderId
-        this.activeUsers = activeUsers
+        this.activeUsers = activeUsers 
+    
     }
     send(recipients: Set<string>, data: Record<string, string>,messageId: string) {
         for (const entry of recipients) {

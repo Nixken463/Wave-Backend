@@ -6,7 +6,7 @@ import type { messages } from "src/types/messages";
 import Auth from "src/utils/auth";
 import Message from "src/utils/message";
 
-async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUsers: activeUserMap, db:Database) {
+async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, db:Database) {
     const senderId = ws.data.userId
     const content = data.content as string
     const fileId = data.fileId as string
@@ -45,7 +45,7 @@ async function sendMessage(ws: ServerWebSocket<WSData>, data: messages, activeUs
                 return
             }
         }
-        const message = new Message(senderId, activeUsers)
+        const message = new Message(senderId)
         //send message
         message.send(recipients, { content, senderId, conversationId, fileId }, createMessage)
 

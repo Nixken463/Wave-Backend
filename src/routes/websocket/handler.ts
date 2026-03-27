@@ -40,7 +40,7 @@ export const websocketHandlers = {
         return
       }
 
-      await sendMessage(ws, data, activeUsers, db)
+      await sendMessage(ws, data,db)
     }
     finally {
       db.release
