@@ -5,7 +5,7 @@ class Responses {
     public constructor(c: Context) {
         this.c = c
     }
-    error(error: string, statusCode: ContentfulStatusCode): Response {
+    error(error: string | string[], statusCode: ContentfulStatusCode): Response {
         return this.c.json(
             {
                 "error": error

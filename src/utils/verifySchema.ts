@@ -1,16 +1,15 @@
 import type { Context } from 'hono'
 import { ZodType } from 'zod'
-
+import Responses from './responses'
 export async function verifySchema(c: Context, schema: ZodType) {
   let body
+  const r = new Responses(c)
   try {
     body = await c.req.json()
   }
   catch {
-    return c.json({
-      "success": false,
-      "error": "InvalidJSON"
-    }, 400)
+    return r.error("InvalidJSON",400)
+    
   }
   const result = await schema.safeParseAsync(body)
 
@@ -22,15 +21,14 @@ export async function verifySchema(c: Context, schema: ZodType) {
       const errorMessage = code.message
       errorList.push(errorMessage)
     }
-    return c.json({
-      "success": false,
-      "errors": errorList
-    }, 400)
+    return r.error(errorList,400)
+   
   }
   return body
 }
 export async function verifyFileSchema(c: Context, schema:ZodType, data:any){
   const result = await schema.safeParseAsync(data)
+  const r = new Responses(c)
 
   
   if (!result.success) {
@@ -41,10 +39,8 @@ export async function verifyFileSchema(c: Context, schema:ZodType, data:any){
       const errorMessage = code.message
       errorList.push(errorMessage)
     }
-    return c.json({
-      "success": false,
-      "errors": errorList
-    }, 401)
+    return r.error(errorList,401)
+
   }
   return true
 }
