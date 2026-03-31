@@ -43,7 +43,7 @@ export const websocketHandlers = {
       await sendMessage(ws, data,db)
     }
     finally {
-      db.release
+      db.release()
     }
   },
 
