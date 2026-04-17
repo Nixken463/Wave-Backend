@@ -20,7 +20,6 @@ register.post('/', async (c) => {
   const password: string = body.password.trim()
   const hash = await auth.hashPassword(password)
 
-  try {
     const exists = await db.select("users", ["*"], { "username": username })
 
     if (exists.length > 0) {
@@ -34,10 +33,6 @@ register.post('/', async (c) => {
     return r.success(201)
 
   }
-  catch (error) {
-    return r.error("RegistrationFailed", 500)
-  }
-}
 
 
 )

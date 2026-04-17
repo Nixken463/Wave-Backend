@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url"
 import { Hono } from "hono"
 import databaseMiddleware from "src/middleware/databaseMiddleware"
 import tokenMiddleware from "src/middleware/tokenMiddleware"
+import Logger from "./logger"
+import Responses from "./responses"
 import type { Env } from "src/types/hono"
 class Router {
     private app: Hono<Env>
@@ -11,7 +13,13 @@ class Router {
 
     constructor(app: Hono<Env>) {
         this.app = app
-        this.app.use('*', databaseMiddleware)
+        //log all errors
+        app.onError((err, c) => {
+            Logger.getInstance().log(err)
+            const r = new Responses(c)
+            return r.error("InternalServerError", 500)
+        })
+        app.use('*', databaseMiddleware)
         this.excludedRoutes = ["login", "register"]
 
     }
@@ -33,10 +41,10 @@ class Router {
                 .replace(/\.ts$/, "")
                 .replaceAll("\\", "/")
 
-           if (!this.excludedRoutes.some(excluded => routePath.includes(excluded))) {
+            if (!this.excludedRoutes.some(excluded => routePath.includes(excluded))) {
                 this.app.use(`${routePath}/*`, tokenMiddleware)
             }
-            
+
             console.log("Loaded:", routePath)
             this.app.route(routePath, module.default)
         }

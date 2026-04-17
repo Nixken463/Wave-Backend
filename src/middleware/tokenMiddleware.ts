@@ -1,6 +1,7 @@
 import type { Context, Next } from 'hono'
 import Auth from 'src/utils/auth'
 import Responses from 'src/utils/responses'
+import Logger from 'src/utils/logger'
 export default async function tokenMiddleware(c: Context, next: Next) {
     const r = new Responses(c)
     const db = c.get('db')
@@ -21,8 +22,9 @@ export default async function tokenMiddleware(c: Context, next: Next) {
         await next()
     }
     catch (error) {
-        console.log(error)
-        return r.error("InternalServerError", 500)
+
+           Logger.getInstance().log(error)
+            return r.error("InternalServerError",500)
 
     }
 
