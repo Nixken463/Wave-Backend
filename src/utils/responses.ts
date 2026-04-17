@@ -5,10 +5,13 @@ class Responses {
     public constructor(c: Context) {
         this.c = c
     }
-    error(error: string | string[], statusCode: ContentfulStatusCode): Response {
+    error(errors: string | string[], statusCode: ContentfulStatusCode): Response {
+        if (typeof errors === "string"){
+            errors = [errors]
+        }
         return this.c.json(
             {
-                "error": error
+                "errors": errors
             },
             statusCode
         )
@@ -22,7 +25,7 @@ class Responses {
         )
     }
 
-    data(data: string, statusCode: ContentfulStatusCode): Response {
+    data(data: string | Record<string, unknown>, statusCode: ContentfulStatusCode): Response {
         return this.c.json(
 
             data
