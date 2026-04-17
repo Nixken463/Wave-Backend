@@ -9,7 +9,6 @@ const upload = new Hono<Env>
 upload.post('/', async (c) => {
     const r = new Responses(c)
     const db = c.get('db')
-    const host = process.env.USER
     const body = await c.req.parseBody()
     const metadata = {
         filename: body.filename,
@@ -48,7 +47,7 @@ upload.post('/', async (c) => {
             }
 
             const fileId: number = insertResult
-            const basepath = `/home/${host}/files/`
+            const basepath = `files/`
             const filebuffer = await filedata.arrayBuffer()
             let filepath: string
             //Save file under userId if profile_picture, else save under conversationId

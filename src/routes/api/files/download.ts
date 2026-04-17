@@ -21,8 +21,7 @@ download.get('/:fileId', async (c) => {
     const fileOwnerId = fileResult[0].userId
     const filetype = fileResult[0].type
     const fileMime = fileResult[0].mime
-    const host = process.env.USER
-    const basepath = `/home/${host}/files/`
+    const basepath = `files/`
     let path
 
     if (filetype !== "profile_picture") {
