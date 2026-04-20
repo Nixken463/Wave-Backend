@@ -13,6 +13,7 @@ class Logger {
         const date = await this.createDir()
         const time = new Date().toLocaleTimeString()
         const path = `logs/${date}/${time}`
+        console.log(`New error at: ${path}`)
         await Bun.write(path, error + "\n");
     }
     async createDir() {
