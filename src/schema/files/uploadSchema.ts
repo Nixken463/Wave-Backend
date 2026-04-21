@@ -5,23 +5,6 @@ export const uploadSchema = z.object({
     .min(1, "FilenameRequired")
     .max(255, "FilenameTooLong"),
 
-  mime: z.literal([
-  //images
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/webp",
-  "image/gif",
-
-  // documents
-  "application/pdf",
-  "text/plain",
-  "text/markdown",
-
-  ],
-  "InvalidMime"
-),
-
   size: z.number()
     .int()
     .positive("SizeMustBePositive")
