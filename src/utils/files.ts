@@ -54,7 +54,7 @@ class Files {
     }
     await Bun.write(filepath, filebuffer, { createPath: true })
     //successful upload
-    return r.success(200)
+    return r.data({'fileId':fileId},201)
   }
   async serve(c: Context, senderId: string, fileId: string = "", isProfilePicture = false) {
     const basepath = `files/`
