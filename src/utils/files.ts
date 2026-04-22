@@ -40,6 +40,10 @@ class Files {
     //Save file under userId if profile_picture, else save under conversationId
     if (body.type === "profile_picture") {
       filepath = `${basepath}users/profilePictures/${userId}.webp`
+      if (await this.exists(filepath)) {
+        const file = Bun.file(filepath)
+        await file.delete()
+      }
       await sharp(filebuffer)
         .resize(512, 512)
         .toFormat("webp", { quality: 80 })
@@ -54,7 +58,7 @@ class Files {
     }
     await Bun.write(filepath, filebuffer, { createPath: true })
     //successful upload
-    return r.data({'fileId':fileId},201)
+    return r.data({ 'fileId': fileId }, 201)
   }
   async serve(c: Context, senderId: string, fileId: string = "", isProfilePicture = false) {
     const basepath = `files/`
