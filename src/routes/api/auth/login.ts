@@ -9,7 +9,6 @@ const login = new Hono<Env>
 login.post('/', async (c) => {
   const r = new Responses(c)
   const body = await verifySchema(c, loginSchema)
-  console.log(body)
   if ('headers' in body) {
     return body
   }
@@ -20,7 +19,6 @@ login.post('/', async (c) => {
   const sentPassword = body.password.trim()
   const os: string = body.os.trim()
   const isValid = await auth.verifyPassword(username, sentPassword)
-  console.log(c)
   if (!isValid) {
     return r.error("WrongCredentials", 401)
   }
