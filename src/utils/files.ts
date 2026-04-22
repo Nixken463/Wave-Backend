@@ -39,7 +39,7 @@ class Files {
     //Save file under userId if profile_picture, else save under conversationId
     if (body.type === "profile_picture") {
       filepath = `${basepath}users/profilePictures/${userId}.jpeg`
-      console.log(filepath)
+      
     }
     else {
       if (!body.conversationId) {
@@ -51,19 +51,20 @@ class Files {
     //successful upload
     return r.success(200)
   }
-  async serve(c: Context,senderId:number,fileId:string, isProfilePicture = false) {
+  async serve(c: Context, senderId: number, fileId: string = "", isProfilePicture = false) {
     const basepath = `files/`
     const r = new Responses(c)
-    const fileResult = await this.db.select('files', ['filename', 'userId', 'type',], { 'fileId': fileId })
 
-    if (fileResult.length === 0) {
-        return r.error("FileDoesNotExist", 400)
-    }
-
+    let filename
+    let fileResult
     let path
     if (!isProfilePicture) {
-      const fileResult = await this.db.select('files', ['filename', 'userId', 'type',], { 'fileId': fileId })
+      fileResult = await this.db.select('files', ['filename', 'userId', 'type',], { 'fileId': fileId })
 
+      if (fileResult.length === 0) {
+        return r.error("FileDoesNotExist", 400)
+      }
+      filename = fileResult[0].filename
       const result = await this.db.query`
             SELECT messages.conversationId
             FROM messages
@@ -71,8 +72,8 @@ class Files {
             INNER JOIN conversations ON conversations.conversationId = messages.conversationId
             WHERE attachments.fileId = ${fileId}
             AND conversations.userId = ${senderId}
-`     
-      console.log(result, senderId,fileId)
+`
+      console.log(result, senderId, fileId)
       this.db.release()
       if (result.length === 0) {
         return r.error("MissingPermissions", 403)
@@ -85,7 +86,7 @@ class Files {
 
     else {
       path = `${basepath}users/profilePictures/${senderId}.jpeg`
-
+      filename = `${senderId}.jpeg`
     }
     const file = Bun.file(path)
     const fileExists = await file.exists()
@@ -94,7 +95,7 @@ class Files {
     }
     const fileStats = await stat(path)
     c.header('Content-Type', 'application/octet-stream');
-    c.header('Content-Disposition', `attachment; filename="${fileResult[0].filename}"`);
+    c.header('Content-Disposition', `attachment; filename="${filename}"`);
     c.header('Content-Length', fileStats.size.toString());
     const filestream = file.stream()
     return new Response(filestream)
@@ -108,7 +109,7 @@ class Files {
   ): Promise<boolean> {
 
     const maxSize = {
-      profile_picture: 300 * 1024,    // 300 KB
+      profile_picture: 5 * 1024 * 1024,    // 5 MB
       attachment: 100 * 1024 * 1024      // 100 MB 
     }
     const fileType = body.type as string
@@ -118,6 +119,11 @@ class Files {
     const maxFileSize = maxSize[fileType as keyof typeof maxSize]
 
     return fileSize <= maxFileSize
+  }
+  async exists(path: string): Promise<boolean> {
+    const file = Bun.file(path)
+    const exists = await file.exists()
+    return exists
   }
 
 }
