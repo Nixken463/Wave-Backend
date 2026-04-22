@@ -14,40 +14,39 @@ const router = new Router(app)
 await router.load()
 //start server. Send to bun websocket or hono api
 const server = serve<WSData>({
-    port: 3000,
+  port: 3000,
 
-    fetch: async (req, serverInstance) => {
-      if (req.headers.get("upgrade")?.toLowerCase() === "websocket") {
-        const authHeader = req.headers.get("Authorization")
-
-        if (!authHeader?.startsWith("Bearer ")) {
-          return new Response("MissingToken", { status: 401 })
-        }
-
-        const token = authHeader.substring(7)
-
-        // make db request
-        const con = await ConnectionPool.getInstance().reserve()
-        const db = new Database(con)
-        const result =  await new Auth(db).checkToken(token)
-        db.release()
-        if (result.success === false){
-            return new Response("InvalidToken", { status: 401 })
-        }
-        const userId = result.userId.toString()
-        const success = serverInstance.upgrade(req, {
-          data: { userId },
-        })
-
-        if (success) return
-        return new Response("UpgradeFailed", { status: 400 })
+  fetch: async (req, serverInstance) => {
+    if (req.headers.get("upgrade")?.toLowerCase() === "websocket") {
+      const authHeader = req.headers.get("Authorization")
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response("MissingToken", { status: 401 })
       }
 
-      return app.fetch(req)
-    },
+      const token = authHeader.substring(7)
 
-    websocket: {
-      ...websocketHandlers,
-      idleTimeout:0
-    },
-  })
+      // make db request
+      const con = await ConnectionPool.getInstance().reserve()
+      const db = new Database(con)
+      const result = await new Auth(db).checkToken(token)
+      db.release()
+      if (result.success === false) {
+        return new Response("InvalidToken", { status: 401 })
+      }
+      const userId = result.userId.toString()
+      const success = serverInstance.upgrade(req, {
+        data: { userId },
+      })
+
+      if (success) return
+      return new Response("UpgradeFailed", { status: 400 })
+    }
+
+    return app.fetch(req)
+  },
+
+  websocket: {
+    ...websocketHandlers,
+    idleTimeout: 0
+  },
+})
