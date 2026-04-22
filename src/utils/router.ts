@@ -40,7 +40,8 @@ class Router {
                 .replace(/^src[\\/]+routes/, "")
                 .replace(/\.ts$/, "")
                 .replaceAll("\\", "/")
-
+            routePath = routePath.replace(/\[([^\]]+)\]/g, ':$1');
+            
             if (!this.excludedRoutes.some(excluded => routePath.includes(excluded))) {
                 this.app.use(`${routePath}/*`, tokenMiddleware)
             }
