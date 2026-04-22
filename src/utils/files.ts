@@ -3,7 +3,7 @@ import type Database from "./database"
 import Responses from "./responses"
 import type { BodyData } from "hono/utils/body"
 import { stat } from 'node:fs/promises';
-
+import sharp from "sharp";
 class Files {
   db: Database
 
@@ -17,6 +17,7 @@ class Files {
     const userId = c.get('userId').toString()
     const filename = body.filename as string
     const filesize = parseInt(body.size as string, 10)
+    const fileExtension = filename.split('.').pop()
 
 
     if (!filedata) {
@@ -38,24 +39,29 @@ class Files {
     let filepath: string
     //Save file under userId if profile_picture, else save under conversationId
     if (body.type === "profile_picture") {
-      filepath = `${basepath}users/profilePictures/${userId}.jpeg`
-      
+      filepath = `${basepath}users/profilePictures/${userId}.webp`
+      await sharp(filebuffer)
+        .resize(512, 512)
+        .toFormat("webp", { quality: 80 })
+        .toFile(filepath);
+      return r.success(200)
     }
     else {
       if (!body.conversationId) {
         return r.error("MissingConversationId", 400)
       }
-      filepath = `${basepath}conversation/${body.conversationId}/${fileId}`
+      filepath = `${basepath}conversation/${body.conversationId}/${fileId}.${fileExtension}`
     }
     await Bun.write(filepath, filebuffer, { createPath: true })
     //successful upload
     return r.success(200)
   }
-  async serve(c: Context, senderId: number, fileId: string = "", isProfilePicture = false) {
+  async serve(c: Context, senderId: string, fileId: string = "", isProfilePicture = false) {
     const basepath = `files/`
     const r = new Responses(c)
 
     let filename
+    let fileExtension
     let fileResult
     let path
     if (!isProfilePicture) {
@@ -73,7 +79,6 @@ class Files {
             WHERE attachments.fileId = ${fileId}
             AND conversations.userId = ${senderId}
 `
-      console.log(result, senderId, fileId)
       this.db.release()
       if (result.length === 0) {
         return r.error("MissingPermissions", 403)
@@ -85,20 +90,31 @@ class Files {
     }
 
     else {
-      path = `${basepath}users/profilePictures/${senderId}.jpeg`
-      filename = `${senderId}.jpeg`
+      path = `${basepath}users/profilePictures/${senderId}`
+      fileExtension = "jpeg"
+
+      //send default Picture if user has not uploaded a profile Picture
+      if (!await this.exists(path)) {
+        path = `public/assets/defaultProfilePicture.webp`
+        fileExtension = "webp"
+      }
+
+      filename = `${senderId}.${fileExtension}`
     }
-    const file = Bun.file(path)
-    const fileExists = await file.exists()
-    if (!fileExists) {
+    if (!await this.exists(path)) {
       return r.error("FileNotFound", 400)
     }
     const fileStats = await stat(path)
-    c.header('Content-Type', 'application/octet-stream');
-    c.header('Content-Disposition', `attachment; filename="${filename}"`);
-    c.header('Content-Length', fileStats.size.toString());
+    const file = Bun.file(path)
+
     const filestream = file.stream()
-    return new Response(filestream)
+    return new Response(filestream, {
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": fileStats.size.toString(),
+      }
+    })
 
 
 
