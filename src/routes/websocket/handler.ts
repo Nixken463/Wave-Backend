@@ -36,7 +36,7 @@ export const websocketHandlers = {
     const db = new Database(con)
     try {
       if (data.messageId) {
-        updateMessage(ws, data, db)
+        await updateMessage(ws, data, db)
         return
       }
 
