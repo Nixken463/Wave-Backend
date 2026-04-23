@@ -14,48 +14,51 @@ class Files {
     const r = new Responses(c)
     const filedata = body.file as File
     const fileType = body.type as string
-    const userId = c.get('userId').toString()
+    const userId = c.get('userId')
     const filename = body.filename as string
     const filesize = parseInt(body.size as string, 10)
     const fileExtension = filename.split('.').pop()
-
-
+    const isProfile = body.type === "profile_picture"
+    const basepath = `files/`
     if (!filedata) {
       return r.error("InvalidFile", 422)
     }
+    const filebuffer = await filedata.arrayBuffer()
+
+    let filepath: string
+    //Save file under userId if profile_picture, else save under conversationId
+    if (isProfile) {
+      filepath = `${basepath}users/profilePictures/${userId}.webp`
+      if (await this.exists(filepath)) {
+        const file = Bun.file(filepath)
+        await file.delete()
+        await this.db.remove('files',{'type':'profile_picture','userId':userId})
+      }
+      await sharp(filebuffer)
+        .resize(512, 512)
+        .toFormat("webp", { quality: 80 })
+        .toFile(filepath);
+    }
+    //To Do fix files not getting inserted
     const insertResult = await this.db.insert("files", {
       "userId": userId,
       "filename": filename,
       "size": filesize,
       "type": fileType
     }, true)
-    if (insertResult.length === 0) {
+    if (!insertResult) {
       return r.error("InternalServerError", 500)
     }
-
+    if (isProfile){
+      return r.success(201)
+    }
     const fileId: number = insertResult
-    const basepath = `files/`
-    const filebuffer = await filedata.arrayBuffer()
-    let filepath: string
-    //Save file under userId if profile_picture, else save under conversationId
-    if (body.type === "profile_picture") {
-      filepath = `${basepath}users/profilePictures/${userId}.webp`
-      if (await this.exists(filepath)) {
-        const file = Bun.file(filepath)
-        await file.delete()
-      }
-      await sharp(filebuffer)
-        .resize(512, 512)
-        .toFormat("webp", { quality: 80 })
-        .toFile(filepath);
-      return r.success(200)
+
+    if (!body.conversationId) {
+      return r.error("MissingConversationId", 400)
     }
-    else {
-      if (!body.conversationId) {
-        return r.error("MissingConversationId", 400)
-      }
-      filepath = `${basepath}conversation/${body.conversationId}/${fileId}.${fileExtension}`
-    }
+    filepath = `${basepath}conversation/${body.conversationId}/${fileId}.${fileExtension}`
+
     await Bun.write(filepath, filebuffer, { createPath: true })
     //successful upload
     return r.data({ 'fileId': fileId }, 201)
