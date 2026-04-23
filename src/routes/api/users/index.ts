@@ -11,7 +11,6 @@ searchUsers.get("/", async (c) =>{
         return r.error("MissingParams", 400)
     }
     const result = await db.query`SELECT username,userId FROM users WHERE username LIKE ${username + "%"} LIMIT 10`
-    console.log(result)
     return r.data(result,200)
 })
 export default searchUsers
