@@ -30,6 +30,7 @@ class Router {
         for (const filepath of glob.scanSync()) {
             //skip the router itself
             if (basename(filepath) === "router.ts") continue
+            const isIndex = basename(filepath) === "index.ts"
 
             const module = await import(
                 pathToFileURL(resolve(filepath)).href
@@ -41,7 +42,10 @@ class Router {
                 .replace(/\.ts$/, "")
                 .replaceAll("\\", "/")
             routePath = routePath.replace(/\[([^\]]+)\]/g, ':$1');
-            
+            if (isIndex) {
+                routePath = routePath.replace(/\/index$/, "")
+            }
+
             if (!this.excludedRoutes.some(excluded => routePath.includes(excluded))) {
                 this.app.use(`${routePath}/*`, tokenMiddleware)
             }
