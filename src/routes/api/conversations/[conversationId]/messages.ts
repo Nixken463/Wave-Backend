@@ -9,7 +9,7 @@ messages.get("/", async (c) => {
     const db = c.get('db')
     const auth = new Auth(db)
     const userId = c.get('userId').toString()
-    const conversationId = c.req.query("conversationId")
+    const conversationId = c.req.param("conversationId")
     const limit = c.req.query("limit") ?? "30"
     const offset = c.req.query("offset") ?? "0"
 
